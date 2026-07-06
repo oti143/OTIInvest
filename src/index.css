@@ -1,0 +1,227 @@
+@import url('https://fonts.googleapis.com/css2?family=Playfair+Display:wght@600;700&family=Inter:wght@400;500;600&display=swap');
+@tailwind base;
+@tailwind components;
+@tailwind utilities;
+
+@layer base {
+  :root {
+    --background: 220 30% 8%;
+    --foreground: 45 80% 92%;
+    --card: 220 25% 12%;
+    --card-foreground: 45 80% 92%;
+    --popover: 220 25% 12%;
+    --popover-foreground: 45 80% 92%;
+    --primary: 43 74% 60%;
+    --primary-foreground: 220 30% 8%;
+    --secondary: 220 20% 18%;
+    --secondary-foreground: 45 60% 85%;
+    --muted: 220 20% 18%;
+    --muted-foreground: 220 10% 55%;
+    --accent: 43 74% 60%;
+    --accent-foreground: 220 30% 8%;
+    --destructive: 0 62% 55%;
+    --destructive-foreground: 0 0% 100%;
+    --border: 220 20% 22%;
+    --input: 220 20% 18%;
+    --ring: 43 74% 60%;
+    --radius: 0.5rem;
+  }
+
+  * {
+    @apply border-border;
+  }
+
+  body {
+    @apply bg-background text-foreground;
+    font-family: 'Inter', sans-serif;
+    font-size: 16px;
+    line-height: 1.6;
+  }
+
+  h1, h2, h3, h4 {
+    font-family: 'Playfair Display', serif;
+  }
+}
+
+@layer utilities {
+  .gold-gradient {
+    background: linear-gradient(135deg, #c9a84c 0%, #f5d78a 50%, #c9a84c 100%);
+  }
+  .gold-text {
+    background: linear-gradient(135deg, #c9a84c 0%, #f5d78a 50%, #c9a84c 100%);
+    -webkit-background-clip: text;
+    -webkit-text-fill-color: transparent;
+    background-clip: text;
+  }
+  .card-glass {
+    background: rgba(255,255,255,0.04);
+    border: 1px solid rgba(201, 168, 76, 0.2);
+    backdrop-filter: blur(8px);
+  }
+  .navy-card {
+    background: rgba(15, 22, 40, 0.8);
+    border: 1px solid rgba(201, 168, 76, 0.25);
+  }
+  .duration-350 {
+    transition-duration: 350ms;
+  }
+}
+
+/* ============================================
+   PRINT STYLES — A4 Formal Contract Layout
+   ============================================ */
+@media print {
+  * {
+    -webkit-print-color-adjust: exact !important;
+    print-color-adjust: exact !important;
+  }
+
+  nav,
+  .print\:hidden,
+  button,
+  footer {
+    display: none !important;
+  }
+
+  body {
+    background: #ffffff !important;
+    color: #111111 !important;
+    font-family: 'Times New Roman', Times, Georgia, serif !important;
+    font-size: 12pt !important;
+    line-height: 1.6 !important;
+    margin: 0 !important;
+    padding: 0 !important;
+  }
+
+  @page {
+    size: A4 portrait;
+    margin: 20mm 18mm 20mm 18mm;
+  }
+
+  .min-h-screen {
+    background: #ffffff !important;
+    padding: 0 !important;
+  }
+
+  .pt-20 {
+    padding-top: 0 !important;
+  }
+
+  .max-w-4xl {
+    max-width: 100% !important;
+    margin: 0 !important;
+    padding: 0 !important;
+  }
+
+  .navy-card {
+    background: #ffffff !important;
+    border: 2px solid #333333 !important;
+    border-radius: 0 !important;
+    color: #111111 !important;
+    box-shadow: none !important;
+    padding: 12mm !important;
+  }
+
+  .text-foreground,
+  .text-muted-foreground,
+  h1, h2, h3, h4, p, span, td, th, li {
+    color: #111111 !important;
+    -webkit-text-fill-color: #111111 !important;
+  }
+
+  .gold-text,
+  [class*="gold-text"] {
+    background: none !important;
+    -webkit-background-clip: unset !important;
+    -webkit-text-fill-color: #5a3e00 !important;
+    color: #5a3e00 !important;
+    font-weight: 700 !important;
+  }
+
+  .gold-gradient {
+    background: #5a3e00 !important;
+  }
+
+  .border, [class*="border-"] {
+    border-color: #cccccc !important;
+  }
+
+  .bg-gold\/5,
+  .bg-secondary\/30,
+  .bg-secondary\/20 {
+    background: #f9f6ee !important;
+  }
+
+  .bg-blue-500\/5 {
+    background: #eef4ff !important;
+  }
+
+  .border-amber-500\/30 {
+    border-color: #b45309 !important;
+    background: #fffbeb !important;
+  }
+
+  .text-amber-400,
+  .text-amber-400\/80 {
+    color: #92400e !important;
+    -webkit-text-fill-color: #92400e !important;
+  }
+
+  .text-blue-400 {
+    color: #1d4ed8 !important;
+    -webkit-text-fill-color: #1d4ed8 !important;
+  }
+
+  .rounded-full.border {
+    border-color: #666 !important;
+    background: #f0f0f0 !important;
+  }
+
+  .border-b.border-border {
+    border-bottom: 1.5pt solid #333 !important;
+  }
+
+  .italic {
+    font-style: italic !important;
+    font-size: 16pt !important;
+    font-family: 'Georgia', serif !important;
+  }
+
+  .rounded-full.border-gold\/30 {
+    border: 1.5pt solid #5a3e00 !important;
+    background: #fdf8ee !important;
+  }
+
+  .mb-8 {
+    page-break-inside: avoid;
+  }
+
+  h3 {
+    page-break-after: avoid;
+  }
+
+  .grid {
+    display: grid !important;
+  }
+
+  .max-h-48 {
+    max-height: none !important;
+    overflow: visible !important;
+  }
+
+  /* PDF Receipt */
+  .print-receipt {
+    display: block !important;
+    background: #fff !important;
+    color: #111 !important;
+    font-family: 'Times New Roman', Georgia, serif !important;
+  }
+
+  .print\:hidden {
+    display: none !important;
+  }
+
+  .hidden.print\:block {
+    display: block !important;
+  }
+}
