@@ -16,7 +16,7 @@ import heroMoneyTree from "@/assets/hero-money-tree.png";
 
 const WHATSAPP_CONTACT = "917026984838";
 const WHATSAPP_MSG = encodeURIComponent("Hi, I would Like to invest in the OTI, Can I get the details Regarding to this");
-const CONTACT_EMAIL = "Otiinvenstment1@gmail.com";
+const CONTACT_EMAIL = "otiinvenstment1@gmail.com";
 
 export default function LandingPage() {
   const [contactForm, setContactForm] = useState({ name: "", message: "" });

@@ -1,10 +1,11 @@
-import { useMemo } from "react";
+import { useMemo, useEffect, useState } from "react";
 import { Link } from "react-router-dom";
 import { BookOpen, Users, ChevronRight, Shield } from "lucide-react";
 import Navbar from "@/components/layout/Navbar";
 import Footer from "@/components/layout/Footer";
 import WhatsAppButton from "@/components/features/WhatsAppButton";
 import { formatRefNumber } from "@/lib/refNumber";
+import { supabase } from "@/lib/supabase";
 
 interface RegisterEntry {
   regNo: string;
@@ -17,35 +18,29 @@ function generateRegNo(index: number, date: string): string {
   return formatRefNumber(year, index + 1);
 }
 
-function loadRegistrations(): RegisterEntry[] {
-  const entries: RegisterEntry[] = [];
-  const seen = new Set<string>();
+async function loadRegistrations(): Promise<RegisterEntry[]> {
+  try {
+    const { data, error } = await supabase
+      .from("registrations")
+      .select("id, full_name, submitted_at")
+      .order("submitted_at", { ascending: true });
 
-  for (let i = 0; i < localStorage.length; i++) {
-    const key = localStorage.key(i);
-    if (key && key.startsWith("oti_app_")) {
-      try {
-        const app = JSON.parse(localStorage.getItem(key) || "");
-        if (app.fullName && !seen.has(app.phone)) {
-          seen.add(app.phone);
-          entries.push({
-            regNo: "", // will assign below
-            name: app.fullName,
-            submittedAt: app.submittedAt || new Date().toISOString(),
-          });
-        }
-      } catch { /* skip */ }
+    if (error) {
+      console.error("Error loading registrations:", error);
+      return [];
     }
+
+    const entries: RegisterEntry[] = (data || []).map((item: any, index: number) => ({
+      regNo: generateRegNo(index, item.submitted_at),
+      name: item.full_name,
+      submittedAt: item.submitted_at,
+    }));
+
+    return entries;
+  } catch (err) {
+    console.error("Error:", err);
+    return [];
   }
-
-  // Sort by submittedAt ascending to assign sequential numbers
-  entries.sort((a, b) => new Date(a.submittedAt).getTime() - new Date(b.submittedAt).getTime());
-
-  // Assign registration numbers
-  return entries.map((e, i) => ({
-    ...e,
-    regNo: generateRegNo(i, e.submittedAt),
-  }));
 }
 
 function formatDate(d: string) {
@@ -56,7 +51,36 @@ function formatDate(d: string) {
 }
 
 export default function RegisterPage() {
-  const registrations = useMemo(() => loadRegistrations(), []);
+  const [registrations, setRegistrations] = useState<RegisterEntry[]>([]);
+  const [loading, setLoading] = useState(true);
+
+  useEffect(() => {
+    // Initial load
+    const fetchRegistrations = async () => {
+      setLoading(true);
+      const data = await loadRegistrations();
+      setRegistrations(data);
+      setLoading(false);
+    };
+
+    fetchRegistrations();
+
+    // Subscribe to real-time updates
+    const channel = supabase
+      .channel("registrations")
+      .on(
+        "postgres_changes",
+        { event: "*", schema: "public", table: "registrations" },
+        () => {
+          fetchRegistrations();
+        }
+      )
+      .subscribe();
+
+    return () => {
+      supabase.removeChannel(channel);
+    };
+  }, []);
 
   return (
     <div className="min-h-screen bg-background">
@@ -104,14 +128,20 @@ export default function RegisterPage() {
         {registrations.length === 0 ? (
           <div className="navy-card rounded-xl p-16 text-center border-gold/15">
             <Users size={40} className="text-muted-foreground mx-auto mb-4" />
-            <p className="text-muted-foreground font-semibold">No registrations yet.</p>
-            <p className="text-muted-foreground text-sm mt-2">Be the first to secure your seat!</p>
-            <Link
-              to="/apply"
-              className="inline-flex items-center gap-2 mt-6 px-6 py-3 gold-gradient text-navy-dark font-bold rounded hover:opacity-90 transition-opacity text-sm"
-            >
-              Apply Now <ChevronRight size={14} />
-            </Link>
+            <p className="text-muted-foreground font-semibold">
+              {loading ? "Loading registrations..." : "No registrations yet."}
+            </p>
+            {!loading && (
+              <>
+                <p className="text-muted-foreground text-sm mt-2">Be the first to secure your seat!</p>
+                <Link
+                  to="/apply"
+                  className="inline-flex items-center gap-2 mt-6 px-6 py-3 gold-gradient text-navy-dark font-bold rounded hover:opacity-90 transition-opacity text-sm"
+                >
+                  Apply Now <ChevronRight size={14} />
+                </Link>
+              </>
+            )}
           </div>
         ) : (
           <div className="navy-card rounded-xl border-gold/15 overflow-hidden">

@@ -7,6 +7,7 @@ import WhatsAppButton from "@/components/features/WhatsAppButton";
 import TermsModal from "@/components/features/TermsModal";
 import { TERMS } from "@/constants";
 import { generateOTIRefNumber } from "@/lib/refNumber";
+import { supabase } from "@/lib/supabase";
 import type { ApplicationForm } from "@/types";
 
 export default function AgreementPage() {
@@ -35,17 +36,44 @@ export default function AgreementPage() {
     return new Date(d).toLocaleDateString("en-IN", { day: "2-digit", month: "long", year: "numeric" });
   };
 
-  const handleConfirm = () => {
-    const refNo = generateOTIRefNumber();
-    const appWithMeta = {
-      ...formData,
-      refNo,
-      submittedAt: new Date().toISOString(),
-      status: "Submitted",
-    };
-    localStorage.setItem(`oti_app_${refNo}`, JSON.stringify(appWithMeta));
-    localStorage.setItem("oti_submitted", "true");
-    navigate("/thank-you");
+  const handleConfirm = async () => {
+    try {
+      const refNo = generateOTIRefNumber();
+      const appWithMeta = {
+        ...formData,
+        refNo,
+        submittedAt: new Date().toISOString(),
+        status: "Submitted",
+      };
+
+      // Save to Supabase
+      const { error } = await supabase
+        .from("registrations")
+        .insert([
+          {
+            full_name: formData.fullName,
+            phone: formData.phone,
+            email: formData.email ? formData.email.toLowerCase() : null,
+            submitted_at: new Date().toISOString(),
+          },
+        ]);
+
+      if (error) {
+        toast.error("Failed to register. Please try again.");
+        console.error("Supabase error:", error);
+        return;
+      }
+
+      // Keep localStorage for backward compatibility
+      localStorage.setItem(`oti_app_${refNo}`, JSON.stringify(appWithMeta));
+      localStorage.setItem("oti_submitted", "true");
+      
+      toast.success("Registration confirmed!");
+      navigate("/thank-you");
+    } catch (err) {
+      toast.error("An error occurred. Please try again.");
+      console.error("Error:", err);
+    }
   };
 
   const handlePrint = () => window.print();
