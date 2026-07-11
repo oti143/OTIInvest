@@ -32,19 +32,45 @@ export default function SeatCounter() {
     fetchCount();
 
     // Subscribe to real-time updates
-    const channel = supabase
-      .channel("registrations")
-      .on(
-        "postgres_changes",
-        { event: "*", schema: "public", table: "registrations" },
-        () => {
-          fetchCount();
-        }
-      )
-      .subscribe();
+    let subscription: any = null;
+
+    try {
+      subscription = supabase
+        .channel(`seat-counter-${Date.now()}`, { config: { broadcast: { self: true } } })
+        .on(
+          "postgres_changes",
+          { event: "INSERT", schema: "public", table: "registrations" },
+          (payload: any) => {
+            console.log("📢 New registration for seat counter:", payload);
+            fetchCount();
+          }
+        )
+        .on(
+          "postgres_changes",
+          { event: "DELETE", schema: "public", table: "registrations" },
+          (payload: any) => {
+            console.log("📢 Registration deleted for seat counter:", payload);
+            fetchCount();
+          }
+        )
+        .subscribe((status: string) => {
+          console.log("Seat counter subscription status:", status);
+        });
+    } catch (err) {
+      console.error("Error setting up seat counter subscription:", err);
+    }
+
+    // Fallback: Poll every 3 seconds for seat count
+    const pollInterval = setInterval(() => {
+      console.log("🔄 Polling seat count...");
+      fetchCount();
+    }, 3000);
 
     return () => {
-      supabase.removeChannel(channel);
+      if (subscription) {
+        supabase.removeChannel(subscription);
+      }
+      clearInterval(pollInterval);
     };
   }, []);
 

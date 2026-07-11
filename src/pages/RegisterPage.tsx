@@ -57,28 +57,59 @@ export default function RegisterPage() {
   useEffect(() => {
     // Initial load
     const fetchRegistrations = async () => {
-      setLoading(true);
-      const data = await loadRegistrations();
-      setRegistrations(data);
-      setLoading(false);
+      try {
+        setLoading(true);
+        const data = await loadRegistrations();
+        setRegistrations(data);
+        setLoading(false);
+      } catch (err) {
+        console.error("Error fetching registrations:", err);
+        setLoading(false);
+      }
     };
 
     fetchRegistrations();
 
     // Subscribe to real-time updates
-    const channel = supabase
-      .channel("registrations")
-      .on(
-        "postgres_changes",
-        { event: "*", schema: "public", table: "registrations" },
-        () => {
-          fetchRegistrations();
-        }
-      )
-      .subscribe();
+    let subscription: any = null;
+    
+    try {
+      subscription = supabase
+        .channel(`registrations-${Date.now()}`, { config: { broadcast: { self: true } } })
+        .on(
+          "postgres_changes",
+          { event: "INSERT", schema: "public", table: "registrations" },
+          (payload: any) => {
+            console.log("📢 New registration received:", payload);
+            fetchRegistrations();
+          }
+        )
+        .on(
+          "postgres_changes",
+          { event: "DELETE", schema: "public", table: "registrations" },
+          (payload: any) => {
+            console.log("📢 Registration deleted:", payload);
+            fetchRegistrations();
+          }
+        )
+        .subscribe((status: string) => {
+          console.log("Subscription status:", status);
+        });
+    } catch (err) {
+      console.error("Error setting up subscription:", err);
+    }
+
+    // Fallback: Poll every 5 seconds for updates
+    const pollInterval = setInterval(() => {
+      console.log("🔄 Polling for updates...");
+      fetchRegistrations();
+    }, 5000);
 
     return () => {
-      supabase.removeChannel(channel);
+      if (subscription) {
+        supabase.removeChannel(subscription);
+      }
+      clearInterval(pollInterval);
     };
   }, []);
 

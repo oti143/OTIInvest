@@ -39,19 +39,45 @@ export default function AdminPage() {
   useEffect(() => {
     if (!isAuthenticated) return;
 
-    const channel = supabase
-      .channel("registrations")
-      .on(
-        "postgres_changes",
-        { event: "*", schema: "public", table: "registrations" },
-        () => {
-          loadApplications();
-        }
-      )
-      .subscribe();
+    let subscription: any = null;
+
+    try {
+      subscription = supabase
+        .channel(`admin-registrations-${Date.now()}`, { config: { broadcast: { self: true } } })
+        .on(
+          "postgres_changes",
+          { event: "INSERT", schema: "public", table: "registrations" },
+          (payload: any) => {
+            console.log("📢 New registration in admin:", payload);
+            loadApplications();
+          }
+        )
+        .on(
+          "postgres_changes",
+          { event: "DELETE", schema: "public", table: "registrations" },
+          (payload: any) => {
+            console.log("📢 Registration deleted in admin:", payload);
+            loadApplications();
+          }
+        )
+        .subscribe((status: string) => {
+          console.log("Admin subscription status:", status);
+        });
+    } catch (err) {
+      console.error("Error setting up admin subscription:", err);
+    }
+
+    // Fallback: Poll every 5 seconds
+    const pollInterval = setInterval(() => {
+      console.log("🔄 Admin polling for updates...");
+      loadApplications();
+    }, 5000);
 
     return () => {
-      supabase.removeChannel(channel);
+      if (subscription) {
+        supabase.removeChannel(subscription);
+      }
+      clearInterval(pollInterval);
     };
   }, [isAuthenticated]);
 
