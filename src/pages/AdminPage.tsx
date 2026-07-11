@@ -35,28 +35,97 @@ export default function AdminPage() {
     }
   }, []);
 
-  const loadApplications = () => {
-    // Normalize legacy OTI- ref numbers to OTIR format
-    normalizeRefNumbers();
+  // Subscribe to real-time updates
+  useEffect(() => {
+    if (!isAuthenticated) return;
 
-    const all: StoredApp[] = [];
-    const seen = new Set<string>();
+    const channel = supabase
+      .channel("registrations")
+      .on(
+        "postgres_changes",
+        { event: "*", schema: "public", table: "registrations" },
+        () => {
+          loadApplications();
+        }
+      )
+      .subscribe();
 
-    for (let i = 0; i < localStorage.length; i++) {
-      const key = localStorage.key(i);
-      if (key && key.startsWith("oti_app_")) {
-        try {
-          const data = JSON.parse(localStorage.getItem(key) || "") as StoredApp;
-          if (!seen.has(data.phone)) {
-            seen.add(data.phone);
-            all.push(data);
-          }
-        } catch { /* skip */ }
+    return () => {
+      supabase.removeChannel(channel);
+    };
+  }, [isAuthenticated]);
+
+  const loadApplications = async () => {
+    try {
+      // Fetch from Supabase
+      const { data, error } = await supabase
+        .from("registrations")
+        .select("*")
+        .order("submitted_at", { ascending: false });
+
+      if (error) {
+        console.error("Error loading applications:", error);
+        return;
       }
-    }
 
-    all.sort((a, b) => new Date(b.submittedAt).getTime() - new Date(a.submittedAt).getTime());
-    setApplications(all);
+      // Also load from localStorage for legacy applications
+      normalizeRefNumbers();
+      const localStorage_apps: StoredApp[] = [];
+      const seen = new Set<string>();
+
+      for (let i = 0; i < localStorage.length; i++) {
+        const key = localStorage.key(i);
+        if (key && key.startsWith("oti_app_")) {
+          try {
+            const app = JSON.parse(localStorage.getItem(key) || "") as StoredApp;
+            if (!seen.has(app.phone)) {
+              seen.add(app.phone);
+              localStorage_apps.push(app);
+            }
+          } catch { /* skip */ }
+        }
+      }
+
+      // Combine Supabase data with localStorage data
+      const all: StoredApp[] = (data || [])
+        .map((item: any, index: number) => ({
+          refNo: `OTIR-${String(index + 1).padStart(5, "0")}`,
+          fullName: item.full_name,
+          phone: item.phone,
+          email: item.email,
+          submittedAt: item.submitted_at,
+          status: "Submitted" as const,
+          fatherHusbandName: "",
+          dateOfBirth: "",
+          gender: "",
+          address: "",
+          city: "",
+          state: "",
+          pincode: "",
+          aadhaarNumber: "",
+          panNumber: "",
+          bankName: "",
+          ifscCode: "",
+          bankAccountNumber: "",
+          nomineeName: "",
+          nomineeRelationship: "",
+          nomineePhone: "",
+          contractStart: "",
+          contractEnd: "",
+          referralName: "",
+          referralPhone: "",
+          signature: "",
+        }))
+        .concat(
+          localStorage_apps.filter(
+            (la) => !(data || []).some((sa: any) => sa.phone === la.phone)
+          )
+        );
+
+      setApplications(all);
+    } catch (err) {
+      console.error("Error:", err);
+    }
   };
 
   const handleLogin = (e: React.FormEvent) => {

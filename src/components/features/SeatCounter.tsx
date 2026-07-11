@@ -1,22 +1,53 @@
-import { useMemo } from "react";
+import { useEffect, useState } from "react";
 import { Users, AlertTriangle, Flame } from "lucide-react";
+import { supabase } from "@/lib/supabase";
 
 const TOTAL_SEATS = 6000;
 
-function getSubmittedCount(): number {
-  let count = 0;
-  for (let i = 0; i < localStorage.length; i++) {
-    const key = localStorage.key(i);
-    if (key && key.startsWith("oti_app_")) count++;
-  }
-  // Demo: minimum 1 if there's a submitted application
-  const submitted = localStorage.getItem("oti_submitted");
-  if (submitted && count === 0) count = 1;
-  return count;
-}
-
 export default function SeatCounter() {
-  const filled = useMemo(() => getSubmittedCount(), []);
+  const [filled, setFilled] = useState(0);
+  const [loading, setLoading] = useState(true);
+
+  // Fetch registration count from Supabase
+  const fetchCount = async () => {
+    try {
+      const { count, error } = await supabase
+        .from("registrations")
+        .select("*", { count: "exact", head: true });
+
+      if (error) {
+        console.error("Error fetching count:", error);
+        return;
+      }
+
+      setFilled(count || 0);
+      setLoading(false);
+    } catch (err) {
+      console.error("Error:", err);
+      setLoading(false);
+    }
+  };
+
+  useEffect(() => {
+    fetchCount();
+
+    // Subscribe to real-time updates
+    const channel = supabase
+      .channel("registrations")
+      .on(
+        "postgres_changes",
+        { event: "*", schema: "public", table: "registrations" },
+        () => {
+          fetchCount();
+        }
+      )
+      .subscribe();
+
+    return () => {
+      supabase.removeChannel(channel);
+    };
+  }, []);
+
   const remaining = TOTAL_SEATS - filled;
   const pct = (filled / TOTAL_SEATS) * 100;
 
@@ -41,7 +72,7 @@ export default function SeatCounter() {
       {/* Counter */}
       <div className="flex items-baseline gap-2 mb-3">
         <span className="font-serif text-4xl font-bold text-foreground">
-          {remaining.toLocaleString("en-IN")}
+          {loading ? "..." : remaining.toLocaleString("en-IN")}
         </span>
         <span className="text-muted-foreground text-sm">/ {TOTAL_SEATS.toLocaleString("en-IN")} seats remaining</span>
       </div>
@@ -54,7 +85,7 @@ export default function SeatCounter() {
         />
       </div>
       <p className="text-muted-foreground text-xs">
-        {filled.toLocaleString("en-IN")} seats claimed · {pct.toFixed(1)}% filled
+        {loading ? "Loading..." : `${filled.toLocaleString("en-IN")} seats claimed · ${pct.toFixed(1)}% filled`}
       </p>
     </div>
   );
