@@ -1,11 +1,12 @@
-import { useMemo, useEffect, useState } from "react";
+import { useEffect, useState } from "react";
 import { Link } from "react-router-dom";
-import { BookOpen, Users, ChevronRight, Shield } from "lucide-react";
+import { BookOpen, Users, ChevronRight, Shield, RotateCw } from "lucide-react";
 import Navbar from "@/components/layout/Navbar";
 import Footer from "@/components/layout/Footer";
 import WhatsAppButton from "@/components/features/WhatsAppButton";
 import { formatRefNumber } from "@/lib/refNumber";
 import { supabase } from "@/lib/supabase";
+import { toast } from "sonner";
 
 interface RegisterEntry {
   regNo: string;
@@ -128,6 +129,17 @@ export default function RegisterPage() {
             Official OTI investment registration list. Reference numbers are publicly listed to maintain transparency.
           </p>
           <div className="w-16 h-0.5 gold-gradient mx-auto mt-4" />
+          <button
+            onClick={async () => {
+              console.log("🔄 Manual refresh triggered");
+              const data = await loadRegistrations();
+              setRegistrations(data);
+              toast.success("✅ Data refreshed!");
+            }}
+            className="mt-4 inline-flex items-center gap-2 px-3 py-1.5 text-xs rounded border border-gold/30 text-gold hover:bg-gold/10 transition-colors"
+          >
+            <RotateCw size={12} /> Refresh Data
+          </button>
         </div>
 
         {/* Stats Card */}

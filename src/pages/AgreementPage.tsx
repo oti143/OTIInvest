@@ -46,8 +46,11 @@ export default function AgreementPage() {
         status: "Submitted",
       };
 
+      console.log("🚀 Starting registration...");
+      console.log("📝 Form data:", formData);
+
       // Save to Supabase
-      const { error } = await supabase
+      const { data, error } = await supabase
         .from("registrations")
         .insert([
           {
@@ -56,23 +59,31 @@ export default function AgreementPage() {
             email: formData.email ? formData.email.toLowerCase() : null,
             submitted_at: new Date().toISOString(),
           },
-        ]);
+        ])
+        .select();
+
+      console.log("📊 Supabase insert response - Data:", data);
+      console.log("📊 Supabase insert response - Error:", error);
 
       if (error) {
-        toast.error("Failed to register. Please try again.");
-        console.error("Supabase error:", error);
+        const errorMsg = error.message || JSON.stringify(error);
+        toast.error(`❌ Failed to register: ${errorMsg}`);
+        console.error("❌ Supabase error details:", error);
         return;
       }
+
+      console.log("✅ Successfully saved to Supabase!");
 
       // Keep localStorage for backward compatibility
       localStorage.setItem(`oti_app_${refNo}`, JSON.stringify(appWithMeta));
       localStorage.setItem("oti_submitted", "true");
       
-      toast.success("Registration confirmed!");
+      toast.success("✅ Registration confirmed!");
       navigate("/thank-you");
     } catch (err) {
-      toast.error("An error occurred. Please try again.");
-      console.error("Error:", err);
+      const errMsg = err instanceof Error ? err.message : String(err);
+      toast.error(`❌ Error: ${errMsg}`);
+      console.error("❌ Registration error:", err);
     }
   };
 
