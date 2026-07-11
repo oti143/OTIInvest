@@ -8,6 +8,16 @@ import TermsModal from "@/components/features/TermsModal";
 import { TERMS } from "@/constants";
 import { generateOTIRefNumber } from "@/lib/refNumber";
 import { supabase } from "@/lib/supabase";
+import { 
+  sanitizeInput, 
+  isValidEmail, 
+  isValidPhone, 
+  isValidAadhaar, 
+  isValidPAN,
+  isValidBankAccount,
+  isValidIFSC,
+  checkRegistrationRateLimit 
+} from "@/lib/security";
 import type { ApplicationForm } from "@/types";
 
 export default function AgreementPage() {
@@ -38,6 +48,51 @@ export default function AgreementPage() {
 
   const handleConfirm = async () => {
     try {
+      // Rate limiting check
+      const rateLimit = checkRegistrationRateLimit();
+      if (!rateLimit.allowed) {
+        toast.error(`⛔ Too many registrations. Wait ${rateLimit.waitTime}s before trying again.`);
+        return;
+      }
+
+      console.log("🚀 Starting registration with validation...");
+
+      // Validate all fields
+      if (!formData.fullName || formData.fullName.trim().length < 3) {
+        toast.error("❌ Full name must be at least 3 characters");
+        return;
+      }
+
+      if (!isValidPhone(formData.phone)) {
+        toast.error("❌ Invalid phone number format");
+        return;
+      }
+
+      if (formData.email && !isValidEmail(formData.email)) {
+        toast.error("❌ Invalid email format");
+        return;
+      }
+
+      if (formData.aadhaarNumber && !isValidAadhaar(formData.aadhaarNumber)) {
+        toast.error("❌ Invalid Aadhaar format (must be 12 digits)");
+        return;
+      }
+
+      if (formData.panNumber && !isValidPAN(formData.panNumber)) {
+        toast.error("❌ Invalid PAN format (e.g., AAAPL5055K)");
+        return;
+      }
+
+      if (formData.bankAccountNumber && !isValidBankAccount(formData.bankAccountNumber)) {
+        toast.error("❌ Invalid bank account number");
+        return;
+      }
+
+      if (formData.ifscCode && !isValidIFSC(formData.ifscCode)) {
+        toast.error("❌ Invalid IFSC code");
+        return;
+      }
+
       const refNo = generateOTIRefNumber();
       const appWithMeta = {
         ...formData,
@@ -46,17 +101,16 @@ export default function AgreementPage() {
         status: "Submitted",
       };
 
-      console.log("🚀 Starting registration...");
-      console.log("📝 Form data:", formData);
+      console.log("✅ All validations passed");
 
       // Save to Supabase
       const { data, error } = await supabase
         .from("registrations")
         .insert([
           {
-            full_name: formData.fullName,
-            phone: formData.phone,
-            email: formData.email ? formData.email.toLowerCase() : null,
+            full_name: sanitizeInput(formData.fullName),
+            phone: sanitizeInput(formData.phone),
+            email: formData.email ? sanitizeInput(formData.email).toLowerCase() : null,
             submitted_at: new Date().toISOString(),
           },
         ])

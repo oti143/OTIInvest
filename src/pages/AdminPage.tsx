@@ -1,9 +1,10 @@
 import { useState, useEffect } from "react";
 import { useNavigate } from "react-router-dom";
-import { Lock, Eye, EyeOff, Users, Download, Search, LogOut, Calendar, CreditCard, ChevronDown, ChevronUp, Mail, Phone, Trash2 } from "lucide-react";
+import { Lock, Eye, EyeOff, Users, Download, Search, LogOut, Calendar, CreditCard, ChevronDown, ChevronUp, Mail, Phone, Trash2, AlertCircle } from "lucide-react";
 import { normalizeRefNumbers } from "@/lib/refNumber";
 import { supabase } from "@/lib/supabase";
 import { registrationEmitter } from "@/lib/registrationEmitter";
+import { checkLoginRateLimit, sanitizeInput, generateSessionId } from "@/lib/security";
 import { toast } from "sonner";
 import type { ApplicationForm } from "@/types";
 
@@ -27,10 +28,25 @@ export default function AdminPage() {
   const [search, setSearch] = useState("");
   const [expandedRow, setExpandedRow] = useState<string | null>(null);
   const [statusFilter, setStatusFilter] = useState<string>("All");
+  const [loginAttempts, setLoginAttempts] = useState(0);
 
   useEffect(() => {
     const auth = sessionStorage.getItem("oti_admin_auth");
     if (auth === "true") {
+      // Check session timeout (30 minutes)
+      const sessionTime = Number(sessionStorage.getItem("oti_session_time")) || 0;
+      const sessionAge = Date.now() - sessionTime;
+      const SESSION_TIMEOUT = 30 * 60 * 1000; // 30 minutes
+
+      if (sessionAge > SESSION_TIMEOUT) {
+        console.warn("⏰ Session expired due to inactivity");
+        sessionStorage.removeItem("oti_admin_auth");
+        sessionStorage.removeItem("oti_session_id");
+        sessionStorage.removeItem("oti_session_time");
+        toast.error("Session expired. Please login again.");
+        return;
+      }
+
       setIsAuthenticated(true);
       loadApplications();
     }
@@ -147,6 +163,17 @@ export default function AdminPage() {
   const handleLogin = (e: React.FormEvent) => {
     e.preventDefault();
     setError("");
+
+    // Check rate limiting
+    const rateLimit = checkLoginRateLimit(username);
+    if (!rateLimit.allowed) {
+      const msg = `❌ Too many login attempts. Try again in 1 minute. (${rateLimit.remaining} attempts remaining)`;
+      setError(msg);
+      toast.error(msg);
+      setLoginAttempts(5);
+      return;
+    }
+
     if (!username.trim()) {
       setError("Please enter the admin username.");
       return;
@@ -155,12 +182,33 @@ export default function AdminPage() {
       setError("Please enter the admin password.");
       return;
     }
-    if (username.trim() === ADMIN_USERNAME && password === ADMIN_PASSWORD) {
+
+    // Sanitize input
+    const cleanUsername = sanitizeInput(username);
+    const cleanPassword = password; // Don't sanitize password
+
+    if (cleanUsername === ADMIN_USERNAME && cleanPassword === ADMIN_PASSWORD) {
+      // Successful login - create secure session
+      const sessionId = generateSessionId();
       sessionStorage.setItem("oti_admin_auth", "true");
+      sessionStorage.setItem("oti_session_id", sessionId);
+      sessionStorage.setItem("oti_session_time", String(Date.now()));
+      
+      console.log("✅ Secure admin session created");
+      toast.success("✅ Login successful!");
+      
       setIsAuthenticated(true);
+      setLoginAttempts(0);
       loadApplications();
     } else {
-      setError("Invalid username or password. Please try again.");
+      const attempts = loginAttempts + 1;
+      setLoginAttempts(attempts);
+      const remaining = 5 - attempts;
+      const msg = `❌ Invalid credentials. ${remaining} attempts remaining.`;
+      setError(msg);
+      toast.error(msg);
+      
+      console.warn(`⚠️ Failed login attempt ${attempts}/5`);
     }
   };
 
