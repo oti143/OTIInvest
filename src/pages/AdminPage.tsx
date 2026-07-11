@@ -206,6 +206,46 @@ export default function AdminPage() {
     }
   };
 
+  const handleClearAllRecords = async () => {
+    if (!window.confirm("⚠️ WARNING: This will DELETE ALL registration records from the database and cannot be undone. Are you absolutely sure?")) {
+      return;
+    }
+    if (!window.confirm("🚨 FINAL CONFIRMATION: Delete ALL records? Type 'DELETE' in the next prompt if you're sure.")) {
+      return;
+    }
+
+    try {
+      // Clear all from Supabase
+      const { error } = await supabase
+        .from("registrations")
+        .delete()
+        .neq("id", 0); // Delete all records
+
+      if (error) {
+        console.error("Clear error:", error);
+        toast.error("Failed to clear records");
+        return;
+      }
+
+      // Clear localStorage
+      const keysToDelete: string[] = [];
+      for (let i = 0; i < localStorage.length; i++) {
+        const key = localStorage.key(i);
+        if (key && (key.startsWith("oti_app_") || key === "oti_submitted")) {
+          keysToDelete.push(key);
+        }
+      }
+      keysToDelete.forEach(key => localStorage.removeItem(key));
+
+      setApplications([]);
+      setExpandedRow(null);
+      toast.success("✅ All records cleared successfully");
+    } catch (err) {
+      console.error("Clear error:", err);
+      toast.error("Failed to clear records");
+    }
+  };
+
   const handleExportCSV = () => {
     const headers = [
       "Ref No", "Name", "Father/Husband", "DOB", "Gender", "Phone", "Email",
@@ -397,6 +437,13 @@ export default function AdminPage() {
             className="flex items-center gap-2 px-4 py-2 gold-gradient text-navy-dark font-bold rounded hover:opacity-90 transition-opacity text-sm"
           >
             <Download size={14} /> Export CSV
+          </button>
+          <button
+            onClick={handleClearAllRecords}
+            className="flex items-center gap-2 px-4 py-2 bg-red-500/20 border border-red-500/50 text-red-400 font-bold rounded hover:bg-red-500/30 transition-colors text-sm"
+            title="Delete all registration records"
+          >
+            🗑️ Clear All
           </button>
         </div>
 
