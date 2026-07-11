@@ -1,6 +1,7 @@
 import { useEffect, useState } from "react";
 import { Users, AlertTriangle, Flame } from "lucide-react";
 import { supabase } from "@/lib/supabase";
+import { registrationEmitter } from "@/lib/registrationEmitter";
 
 const TOTAL_SEATS = 6000;
 
@@ -30,6 +31,12 @@ export default function SeatCounter() {
 
   useEffect(() => {
     fetchCount();
+
+    // Subscribe to shared emitter
+    const unsubscribe = registrationEmitter.subscribe(() => {
+      console.log("📢 SeatCounter received emitter update");
+      fetchCount();
+    });
 
     // Subscribe to real-time updates
     let subscription: any = null;
@@ -67,6 +74,7 @@ export default function SeatCounter() {
     }, 3000);
 
     return () => {
+      unsubscribe();
       if (subscription) {
         supabase.removeChannel(subscription);
       }

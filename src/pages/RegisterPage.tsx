@@ -6,6 +6,7 @@ import Footer from "@/components/layout/Footer";
 import WhatsAppButton from "@/components/features/WhatsAppButton";
 import { formatRefNumber } from "@/lib/refNumber";
 import { supabase } from "@/lib/supabase";
+import { registrationEmitter } from "@/lib/registrationEmitter";
 import { toast } from "sonner";
 
 interface RegisterEntry {
@@ -63,6 +64,8 @@ export default function RegisterPage() {
         const data = await loadRegistrations();
         setRegistrations(data);
         setLoading(false);
+        console.log("✅ Registrations loaded, emitting update");
+        registrationEmitter.emit(); // Notify other components
       } catch (err) {
         console.error("Error fetching registrations:", err);
         setLoading(false);

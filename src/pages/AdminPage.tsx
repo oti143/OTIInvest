@@ -3,6 +3,7 @@ import { useNavigate } from "react-router-dom";
 import { Lock, Eye, EyeOff, Users, Download, Search, LogOut, Calendar, CreditCard, ChevronDown, ChevronUp, Mail, Phone, Trash2 } from "lucide-react";
 import { normalizeRefNumbers } from "@/lib/refNumber";
 import { supabase } from "@/lib/supabase";
+import { registrationEmitter } from "@/lib/registrationEmitter";
 import { toast } from "sonner";
 import type { ApplicationForm } from "@/types";
 
@@ -67,6 +68,12 @@ export default function AdminPage() {
       console.error("Error setting up admin subscription:", err);
     }
 
+    // Subscribe to shared emitter
+    const unsubscribe = registrationEmitter.subscribe(() => {
+      console.log("📢 Admin received emitter update");
+      loadApplications();
+    });
+
     // Fallback: Poll every 5 seconds
     const pollInterval = setInterval(() => {
       console.log("🔄 Admin polling for updates...");
@@ -77,6 +84,7 @@ export default function AdminPage() {
       if (subscription) {
         supabase.removeChannel(subscription);
       }
+      unsubscribe();
       clearInterval(pollInterval);
     };
   }, [isAuthenticated]);
