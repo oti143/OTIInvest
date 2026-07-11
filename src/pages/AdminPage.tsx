@@ -1,7 +1,9 @@
 import { useState, useEffect } from "react";
 import { useNavigate } from "react-router-dom";
-import { Lock, Eye, EyeOff, Users, Download, Search, LogOut, Calendar, CreditCard, ChevronDown, ChevronUp, Mail, Phone } from "lucide-react";
+import { Lock, Eye, EyeOff, Users, Download, Search, LogOut, Calendar, CreditCard, ChevronDown, ChevronUp, Mail, Phone, Trash2 } from "lucide-react";
 import { normalizeRefNumbers } from "@/lib/refNumber";
+import { supabase } from "@/lib/supabase";
+import { toast } from "sonner";
 import type { ApplicationForm } from "@/types";
 
 const ADMIN_USERNAME = "Manoj";
@@ -105,6 +107,34 @@ export default function AdminPage() {
       `Dear ${app.fullName},\n\nWe would like to inform you that the status of your OTI application (Reference Number: ${app.refNo}) has been updated.\n\nCurrent Status:\n${app.status}\n\nIf you have any questions, please contact our support team.\n\nThank you for choosing OTI – One Time Invest Plan.\n\nRegards,\nManoj\nOTI Administration Team`
     );
     window.open(`mailto:${app.email}?subject=${subject}&body=${body}`, "_blank");
+  };
+
+  const handleDeleteApplication = async (app: StoredApp) => {
+    if (!window.confirm(`Are you sure you want to delete the application for ${app.fullName}? This action cannot be undone.`)) {
+      return;
+    }
+
+    try {
+      // Delete from localStorage
+      const key = `oti_app_${app.refNo}`;
+      localStorage.removeItem(key);
+
+      // Delete from Supabase
+      if (app.phone) {
+        await supabase
+          .from("registrations")
+          .delete()
+          .eq("phone", app.phone);
+      }
+
+      // Update UI
+      setApplications((prev) => prev.filter((a) => a.refNo !== app.refNo));
+      setExpandedRow(null);
+      toast.success(`Application ${app.refNo} deleted successfully`);
+    } catch (err) {
+      console.error("Delete error:", err);
+      toast.error("Failed to delete application");
+    }
   };
 
   const handleExportCSV = () => {
@@ -407,6 +437,13 @@ export default function AdminPage() {
                           title={app.email ? `Notify ${app.email}` : "No email on file"}
                         >
                           <Mail size={12} /> Notify Investor
+                        </button>
+                        <button
+                          onClick={() => handleDeleteApplication(app)}
+                          className="flex items-center gap-1.5 px-3 py-1.5 rounded border border-red-400/30 text-red-400 hover:bg-red-400/10 transition-colors text-xs font-semibold"
+                          title={`Delete application for ${app.fullName}`}
+                        >
+                          <Trash2 size={12} /> Delete
                         </button>
                       </div>
                     </div>
