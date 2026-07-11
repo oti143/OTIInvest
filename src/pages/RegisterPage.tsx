@@ -57,63 +57,48 @@ export default function RegisterPage() {
   const [loading, setLoading] = useState(true);
 
   useEffect(() => {
+    console.log("🚀 Starting register page auto-sync (polling every 2 seconds)");
+
     // Initial load
     const fetchRegistrations = async () => {
       try {
-        setLoading(true);
         const data = await loadRegistrations();
         setRegistrations(data);
         setLoading(false);
-        console.log("✅ Registrations loaded, emitting update");
-        registrationEmitter.emit(); // Notify other components
+        console.log(`✅ Loaded ${data.length} registrations, emitting update`);
+        registrationEmitter.emit(); // Notify other components in same tab
       } catch (err) {
         console.error("Error fetching registrations:", err);
         setLoading(false);
       }
     };
 
+    setLoading(true);
     fetchRegistrations();
 
-    // Subscribe to real-time updates
+    // Poll every 2 seconds - PRIMARY method for cross-device sync
+    const pollInterval = setInterval(() => {
+      console.log("🔄 RegisterPage polling...");
+      fetchRegistrations();
+    }, 2000);
+
+    // Also try real-time subscriptions as bonus
     let subscription: any = null;
-    
     try {
       subscription = supabase
-        .channel(`registrations-${Date.now()}`, { config: { broadcast: { self: true } } })
-        .on(
-          "postgres_changes",
-          { event: "INSERT", schema: "public", table: "registrations" },
-          (payload: any) => {
-            console.log("📢 New registration received:", payload);
-            fetchRegistrations();
-          }
-        )
-        .on(
-          "postgres_changes",
-          { event: "DELETE", schema: "public", table: "registrations" },
-          (payload: any) => {
-            console.log("📢 Registration deleted:", payload);
-            fetchRegistrations();
-          }
-        )
-        .subscribe((status: string) => {
-          console.log("Subscription status:", status);
-        });
+        .channel(`register-${Date.now()}`, { config: { broadcast: { self: true } } })
+        .on("postgres_changes", { event: "*", schema: "public", table: "registrations" }, () => {
+          console.log("📡 Register real-time update");
+          fetchRegistrations();
+        })
+        .subscribe();
     } catch (err) {
-      console.error("Error setting up subscription:", err);
+      console.error("Subscription error:", err);
     }
 
-    // Fallback: Poll every 5 seconds for updates
-    const pollInterval = setInterval(() => {
-      console.log("🔄 Polling for updates...");
-      fetchRegistrations();
-    }, 5000);
-
     return () => {
-      if (subscription) {
-        supabase.removeChannel(subscription);
-      }
       clearInterval(pollInterval);
+      if (subscription) supabase.removeChannel(subscription);
     };
   }, []);
 

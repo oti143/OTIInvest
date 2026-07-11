@@ -30,55 +30,34 @@ export default function SeatCounter() {
   };
 
   useEffect(() => {
+    console.log("🚀 Starting seat counter auto-sync (polling every 2 seconds)");
+
+    // Fetch immediately
     fetchCount();
 
-    // Subscribe to shared emitter
-    const unsubscribe = registrationEmitter.subscribe(() => {
-      console.log("📢 SeatCounter received emitter update");
-      fetchCount();
-    });
-
-    // Subscribe to real-time updates
-    let subscription: any = null;
-
-    try {
-      subscription = supabase
-        .channel(`seat-counter-${Date.now()}`, { config: { broadcast: { self: true } } })
-        .on(
-          "postgres_changes",
-          { event: "INSERT", schema: "public", table: "registrations" },
-          (payload: any) => {
-            console.log("📢 New registration for seat counter:", payload);
-            fetchCount();
-          }
-        )
-        .on(
-          "postgres_changes",
-          { event: "DELETE", schema: "public", table: "registrations" },
-          (payload: any) => {
-            console.log("📢 Registration deleted for seat counter:", payload);
-            fetchCount();
-          }
-        )
-        .subscribe((status: string) => {
-          console.log("Seat counter subscription status:", status);
-        });
-    } catch (err) {
-      console.error("Error setting up seat counter subscription:", err);
-    }
-
-    // Fallback: Poll every 3 seconds for seat count
+    // Poll every 2 seconds - PRIMARY method for cross-device sync
     const pollInterval = setInterval(() => {
       console.log("🔄 Polling seat count...");
       fetchCount();
-    }, 3000);
+    }, 2000);
+
+    // Also try real-time subscriptions as bonus
+    let subscription: any = null;
+    try {
+      subscription = supabase
+        .channel(`seat-${Date.now()}`, { config: { broadcast: { self: true } } })
+        .on("postgres_changes", { event: "*", schema: "public", table: "registrations" }, () => {
+          console.log("📡 Seat count real-time update");
+          fetchCount();
+        })
+        .subscribe();
+    } catch (err) {
+      console.error("Subscription error:", err);
+    }
 
     return () => {
-      unsubscribe();
-      if (subscription) {
-        supabase.removeChannel(subscription);
-      }
       clearInterval(pollInterval);
+      if (subscription) supabase.removeChannel(subscription);
     };
   }, []);
 

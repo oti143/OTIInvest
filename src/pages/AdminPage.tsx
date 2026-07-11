@@ -40,52 +40,34 @@ export default function AdminPage() {
   useEffect(() => {
     if (!isAuthenticated) return;
 
-    let subscription: any = null;
+    console.log("🚀 Starting admin auto-sync (polling every 2 seconds)");
 
+    // Fetch immediately
+    loadApplications();
+
+    // Poll every 2 seconds - PRIMARY method for cross-device sync
+    const pollInterval = setInterval(() => {
+      console.log("🔄 Admin polling...");
+      loadApplications();
+    }, 2000);
+
+    // Also try real-time subscriptions as bonus
+    let subscription: any = null;
     try {
       subscription = supabase
-        .channel(`admin-registrations-${Date.now()}`, { config: { broadcast: { self: true } } })
-        .on(
-          "postgres_changes",
-          { event: "INSERT", schema: "public", table: "registrations" },
-          (payload: any) => {
-            console.log("📢 New registration in admin:", payload);
-            loadApplications();
-          }
-        )
-        .on(
-          "postgres_changes",
-          { event: "DELETE", schema: "public", table: "registrations" },
-          (payload: any) => {
-            console.log("📢 Registration deleted in admin:", payload);
-            loadApplications();
-          }
-        )
-        .subscribe((status: string) => {
-          console.log("Admin subscription status:", status);
-        });
+        .channel(`admin-reg-${Date.now()}`, { config: { broadcast: { self: true } } })
+        .on("postgres_changes", { event: "*", schema: "public", table: "registrations" }, () => {
+          console.log("📡 Real-time update received");
+          loadApplications();
+        })
+        .subscribe();
     } catch (err) {
-      console.error("Error setting up admin subscription:", err);
+      console.error("Subscription error:", err);
     }
 
-    // Subscribe to shared emitter
-    const unsubscribe = registrationEmitter.subscribe(() => {
-      console.log("📢 Admin received emitter update");
-      loadApplications();
-    });
-
-    // Fallback: Poll every 5 seconds
-    const pollInterval = setInterval(() => {
-      console.log("🔄 Admin polling for updates...");
-      loadApplications();
-    }, 5000);
-
     return () => {
-      if (subscription) {
-        supabase.removeChannel(subscription);
-      }
-      unsubscribe();
       clearInterval(pollInterval);
+      if (subscription) supabase.removeChannel(subscription);
     };
   }, [isAuthenticated]);
 
