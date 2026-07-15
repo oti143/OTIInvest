@@ -90,6 +90,12 @@ export default function TechnicalDepartmentPage() {
     { key: "showFinalCtaSection", label: "Final CTA Section" },
   ], []);
 
+  const previewThemeClass = settings.selectedTheme === "festive"
+    ? "border-amber-400/30 bg-amber-500/10"
+    : settings.selectedTheme === "minimal"
+      ? "border-slate-400/30 bg-slate-500/10"
+      : "border-gold/30 bg-gold/5";
+
   return (
     <div className="min-h-screen bg-background">
       <Navbar />
@@ -111,7 +117,7 @@ export default function TechnicalDepartmentPage() {
             <p className="text-center text-muted-foreground text-sm mb-6">Use the technical department credentials to continue.</p>
             <div className="mb-6 rounded-lg border border-gold/20 bg-gold/10 p-3 text-center">
               <p className="text-xs uppercase tracking-[0.25em] text-gold">Authorized Person</p>
-              <p className="font-semibold text-foreground">{settings.technicalAuthorizedPerson || "Charan"}</p>
+              <p className="font-semibold text-foreground">{settings.technicalAuthorizedPerson || "Mr. Charan. G R"}</p>
               <p className="text-xs text-muted-foreground">Developer • Techie</p>
             </div>
             <form onSubmit={handleLogin} className="space-y-4">
@@ -240,16 +246,65 @@ export default function TechnicalDepartmentPage() {
                 <span className="text-sm font-semibold uppercase tracking-wide">Creative Add-ons</span>
               </div>
               <div className="grid md:grid-cols-3 gap-4">
-                {[
-                  { title: "Announcement Banner", description: "Show a live announcement directly on the landing page." },
-                  { title: "Theme Presets", description: "Switch between premium, festive, or minimal visual styles." },
-                  { title: "Maintenance Mode", description: "Pause public access while updates are in progress." },
-                ].map((item) => (
-                  <div key={item.title} className="rounded-lg border border-border bg-secondary/20 p-4">
-                    <h3 className="font-semibold text-foreground mb-2">{item.title}</h3>
-                    <p className="text-sm text-muted-foreground">{item.description}</p>
+                <div className="rounded-lg border border-border bg-secondary/20 p-4">
+                  <div className="flex items-center gap-2 mb-2 text-gold">
+                    <BellRing size={15} />
+                    <h3 className="font-semibold text-foreground">Announcement Banner</h3>
                   </div>
-                ))}
+                  <p className="text-sm text-muted-foreground mb-3">Show a live announcement directly on the landing page.</p>
+                  <label className="flex items-center justify-between gap-3 rounded border border-border p-2">
+                    <span className="text-sm">Enable banner</span>
+                    <input type="checkbox" checked={Boolean(settings.showAnnouncementBanner)} onChange={(e) => setSettings((prev) => ({ ...prev, showAnnouncementBanner: e.target.checked }))} className="h-4 w-4 rounded border-gray-300" />
+                  </label>
+                  <textarea value={settings.announcementBannerText} onChange={(e) => setSettings((prev) => ({ ...prev, announcementBannerText: e.target.value }))} rows={3} className="mt-3 w-full bg-navy-light/50 border border-border rounded px-3 py-2 text-foreground text-sm" />
+                </div>
+
+                <div className="rounded-lg border border-border bg-secondary/20 p-4">
+                  <div className="flex items-center gap-2 mb-2 text-gold">
+                    <PaletteIcon size={15} />
+                    <h3 className="font-semibold text-foreground">Theme Presets</h3>
+                  </div>
+                  <p className="text-sm text-muted-foreground mb-3">Switch between premium, festive, or minimal visual styles.</p>
+                  <select value={settings.selectedTheme} onChange={(e) => setSettings((prev) => ({ ...prev, selectedTheme: e.target.value as typeof settings.selectedTheme }))} className="w-full bg-navy-light/50 border border-border rounded px-3 py-2 text-foreground text-sm">
+                    <option value="premium">Premium</option>
+                    <option value="festive">Festive</option>
+                    <option value="minimal">Minimal</option>
+                  </select>
+                </div>
+
+                <div className="rounded-lg border border-border bg-secondary/20 p-4">
+                  <div className="flex items-center gap-2 mb-2 text-gold">
+                    <MonitorCog size={15} />
+                    <h3 className="font-semibold text-foreground">Maintenance Mode</h3>
+                  </div>
+                  <p className="text-sm text-muted-foreground mb-3">Pause public access while updates are in progress.</p>
+                  <label className="flex items-center justify-between gap-3 rounded border border-border p-2">
+                    <span className="text-sm">Enable maintenance</span>
+                    <input type="checkbox" checked={Boolean(settings.maintenanceMode)} onChange={(e) => setSettings((prev) => ({ ...prev, maintenanceMode: e.target.checked }))} className="h-4 w-4 rounded border-gray-300" />
+                  </label>
+                </div>
+              </div>
+
+              <div className="mt-4 rounded-lg border border-gold/20 bg-gold/5 p-4">
+                <div className="flex items-center gap-2 text-gold mb-2">
+                  <Sparkles size={15} />
+                  <span className="text-xs font-semibold uppercase tracking-wide">Live Preview</span>
+                </div>
+                <div className={`rounded-lg border p-3 ${previewThemeClass}`}>
+                  {settings.showAnnouncementBanner && (
+                    <div className="mb-3 rounded border border-gold/20 bg-gold/10 px-3 py-2 text-sm text-gold">
+                      {settings.announcementBannerText}
+                    </div>
+                  )}
+                  <div className="flex items-center justify-between gap-3 text-sm">
+                    <span className="font-semibold text-foreground">Theme: {settings.selectedTheme}</span>
+                    {settings.maintenanceMode ? (
+                      <span className="rounded-full border border-amber-400/30 bg-amber-500/10 px-2 py-1 text-amber-400">Maintenance On</span>
+                    ) : (
+                      <span className="rounded-full border border-emerald-400/30 bg-emerald-500/10 px-2 py-1 text-emerald-400">Live</span>
+                    )}
+                  </div>
+                </div>
               </div>
             </div>
 
