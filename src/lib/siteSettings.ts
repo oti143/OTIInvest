@@ -6,6 +6,7 @@ export interface SiteSettings {
   heroSubtitle: string;
   heroPrimaryCta: string;
   heroSecondaryCta: string;
+  technicalAuthorizedPerson: string;
   showCommissionSection: boolean;
   showMarketChartSection: boolean;
   showCommunitySection: boolean;
@@ -35,6 +36,7 @@ export function getDefaultSiteSettings(): SiteSettings {
     heroSubtitle: "A trusted long-term share investment plan designed for your future wealth. Managed by Co-Applicant Mr. Manoj.",
     heroPrimaryCta: "Apply Now",
     heroSecondaryCta: "View Plan Details",
+    technicalAuthorizedPerson: "Mr. Manoj",
     showCommissionSection: true,
     showMarketChartSection: true,
     showCommunitySection: true,

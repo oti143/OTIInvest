@@ -72,7 +72,7 @@ export default function Navbar() {
               location.pathname === "/technical-department" ? "text-gold font-semibold" : "text-muted-foreground hover:text-foreground"
             }`}
           >
-            <span className="flex items-center gap-1"><Settings2 size={12} /> Tech</span>
+            <span className="flex items-center gap-1"><Settings2 size={12} /> Tech Assist</span>
           </Link>
           {!isApplyPage && !isAgreementPage && (
             <Link
@@ -82,13 +82,6 @@ export default function Navbar() {
               Apply Now
             </Link>
           )}
-          <Link
-            to="/technical-department"
-            className="flex items-center gap-1 rounded-full border border-gold/20 bg-gold/10 px-3 py-1.5 text-xs font-medium text-gold transition-colors hover:bg-gold/20"
-          >
-            <Settings2 size={12} />
-            <span>Tech Assist</span>
-          </Link>
         </div>
 
         {/* Mobile hamburger */}
@@ -140,7 +133,7 @@ export default function Navbar() {
             { to: "/register", icon: BookOpen, label: "Register Numbers" },
             { to: "/status", icon: Search, label: "Status Tracker" },
             { to: "/admin", icon: Shield, label: "Admin" },
-            { to: "/technical-department", icon: Settings2, label: "Technical Dept" },
+            { to: "/technical-department", icon: Settings2, label: "Tech Assist" },
             { to: "/apply", icon: TrendingUp, label: "Apply Now", highlight: true },
           ].map(({ to, icon: Icon, label, highlight }) => (
             <Link
@@ -168,7 +161,7 @@ export default function Navbar() {
             className="flex items-center gap-2 text-xs text-gold hover:text-gold/80"
           >
             <Settings2 size={12} />
-            <span>Tech Assist Portal</span>
+            <span>Tech Assist</span>
           </Link>
           <p className="text-muted-foreground text-xs mt-2">© {new Date().getFullYear()} OTI One Time Invest</p>
         </div>

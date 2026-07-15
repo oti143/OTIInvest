@@ -134,6 +134,9 @@ export default function TechnicalDepartmentPage() {
                   <p className="text-gold text-xs uppercase tracking-widest font-semibold mb-2">Management Console</p>
                   <h2 className="font-serif text-2xl font-semibold">Content & Layout Controls</h2>
                   <p className="text-muted-foreground text-sm mt-2">Adjust homepage messaging and hide any section that should not appear on the live site.</p>
+                  <div className="mt-3 inline-flex items-center rounded-full border border-gold/20 bg-gold/10 px-3 py-1 text-xs font-semibold text-gold">
+                    Authorized Person: {settings.technicalAuthorizedPerson || "Not set"}
+                  </div>
                 </div>
                 <button onClick={() => { sessionStorage.removeItem("oti_tech_auth"); setIsAuthenticated(false); }} className="flex items-center gap-2 px-3 py-2 rounded border border-border text-sm text-muted-foreground">
                   <Lock size={14} /> Sign Out
@@ -145,6 +148,10 @@ export default function TechnicalDepartmentPage() {
               <div className="navy-card rounded-xl p-6 border-gold/20 space-y-5">
                 <div className="flex items-center gap-2 text-gold"><Sparkles size={16} /> <span className="text-sm font-semibold uppercase tracking-wide">Hero Content</span></div>
                 <div className="space-y-4">
+                  <div>
+                    <label className="block text-xs font-semibold uppercase tracking-wide text-muted-foreground mb-1.5">Technical Authorized Person</label>
+                    <input value={settings.technicalAuthorizedPerson} onChange={(e) => setSettings((prev) => ({ ...prev, technicalAuthorizedPerson: e.target.value }))} className="w-full bg-navy-light/50 border border-border rounded px-3 py-2.5 text-foreground text-sm" />
+                  </div>
                   <div>
                     <label className="block text-xs font-semibold uppercase tracking-wide text-muted-foreground mb-1.5">Hero Badge</label>
                     <input value={settings.heroBadge} onChange={(e) => setSettings((prev) => ({ ...prev, heroBadge: e.target.value }))} className="w-full bg-navy-light/50 border border-border rounded px-3 py-2.5 text-foreground text-sm" />
