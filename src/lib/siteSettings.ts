@@ -36,7 +36,7 @@ export function getDefaultSiteSettings(): SiteSettings {
     heroSubtitle: "A trusted long-term share investment plan designed for your future wealth. Managed by Co-Applicant Mr. Manoj.",
     heroPrimaryCta: "Apply Now",
     heroSecondaryCta: "View Plan Details",
-    technicalAuthorizedPerson: "Mr. Manoj",
+    technicalAuthorizedPerson: "Mr. Charan",
     showCommissionSection: true,
     showMarketChartSection: true,
     showCommunitySection: true,

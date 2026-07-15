@@ -134,14 +134,38 @@ export default function TechnicalDepartmentPage() {
                   <p className="text-gold text-xs uppercase tracking-widest font-semibold mb-2">Management Console</p>
                   <h2 className="font-serif text-2xl font-semibold">Content & Layout Controls</h2>
                   <p className="text-muted-foreground text-sm mt-2">Adjust homepage messaging and hide any section that should not appear on the live site.</p>
-                  <div className="mt-3 inline-flex items-center rounded-full border border-gold/20 bg-gold/10 px-3 py-1 text-xs font-semibold text-gold">
-                    Authorized Person: {settings.technicalAuthorizedPerson || "Not set"}
+                  <div className="mt-4 flex flex-wrap gap-2">
+                    <span className="inline-flex items-center rounded-full border border-gold/20 bg-gold/10 px-3 py-1 text-xs font-semibold text-gold">
+                      {settings.technicalAuthorizedPerson || "Charan"}
+                    </span>
+                    <span className="inline-flex items-center rounded-full border border-border px-3 py-1 text-xs font-semibold text-muted-foreground">
+                      Developer • Techie
+                    </span>
+                    <span className="inline-flex items-center rounded-full border border-emerald-500/20 bg-emerald-500/10 px-3 py-1 text-xs font-semibold text-emerald-400">
+                      Cloud Sync Enabled
+                    </span>
                   </div>
                 </div>
                 <button onClick={() => { sessionStorage.removeItem("oti_tech_auth"); setIsAuthenticated(false); }} className="flex items-center gap-2 px-3 py-2 rounded border border-border text-sm text-muted-foreground">
                   <Lock size={14} /> Sign Out
                 </button>
               </div>
+            </div>
+
+            <div className="grid md:grid-cols-3 gap-4">
+              {[
+                { title: "Live Sync", value: "Instant updates across devices", icon: Sparkles },
+                { title: "Smart Layout", value: "Toggle sections without touching code", icon: Settings2 },
+                { title: "Secure Control", value: "Protected access with cloud-safe settings", icon: ShieldCheck },
+              ].map(({ title, value, icon: Icon }) => (
+                <div key={title} className="navy-card rounded-xl p-4 border-gold/20">
+                  <div className="flex items-center gap-2 text-gold mb-2">
+                    <Icon size={15} />
+                    <span className="text-xs font-semibold uppercase tracking-wide">{title}</span>
+                  </div>
+                  <p className="text-sm text-muted-foreground">{value}</p>
+                </div>
+              ))}
             </div>
 
             <div className="grid lg:grid-cols-[1.1fr_0.9fr] gap-6">
@@ -202,6 +226,25 @@ export default function TechnicalDepartmentPage() {
                     <input value={settings.whatsappContact} onChange={(e) => setSettings((prev) => ({ ...prev, whatsappContact: e.target.value }))} className="w-full bg-navy-light/50 border border-border rounded px-3 py-2.5 text-foreground text-sm" />
                   </div>
                 </div>
+              </div>
+            </div>
+
+            <div className="navy-card rounded-xl p-6 border-gold/20">
+              <div className="flex items-center gap-2 text-gold mb-4">
+                <Sparkles size={16} />
+                <span className="text-sm font-semibold uppercase tracking-wide">Creative Add-ons</span>
+              </div>
+              <div className="grid md:grid-cols-3 gap-4">
+                {[
+                  { title: "Announcement Banner", description: "Show a live announcement directly on the landing page." },
+                  { title: "Theme Presets", description: "Switch between premium, festive, or minimal visual styles." },
+                  { title: "Maintenance Mode", description: "Pause public access while updates are in progress." },
+                ].map((item) => (
+                  <div key={item.title} className="rounded-lg border border-border bg-secondary/20 p-4">
+                    <h3 className="font-semibold text-foreground mb-2">{item.title}</h3>
+                    <p className="text-sm text-muted-foreground">{item.description}</p>
+                  </div>
+                ))}
               </div>
             </div>
 

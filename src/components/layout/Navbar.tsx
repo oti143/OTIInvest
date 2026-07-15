@@ -1,22 +1,40 @@
 
 import { useState, useEffect } from "react";
 import { Link, useLocation } from "react-router-dom";
-import { Shield, Search, Menu, X, Home, TrendingUp, BookOpen, Settings2 } from "lucide-react";
+import { Shield, Search, Menu, X, Home, TrendingUp, BookOpen, Settings2, ChevronRight } from "lucide-react";
 
 export default function Navbar() {
   const location = useLocation();
   const [drawerOpen, setDrawerOpen] = useState(false);
+  const [menuOpen, setMenuOpen] = useState(false);
   const isApplyPage = location.pathname === "/apply";
   const isAgreementPage = location.pathname === "/agreement";
 
-  // Close drawer on route change
-  useEffect(() => { setDrawerOpen(false); }, [location.pathname]);
+  const navLinks = [
+    { to: "/", icon: Home, label: "Home" },
+    { to: "/register", icon: BookOpen, label: "Register" },
+    { to: "/status", icon: Search, label: "Status" },
+    { to: "/admin", icon: Shield, label: "Admin" },
+    { to: "/technical-department", icon: Settings2, label: "Tech Assist" },
+    { to: "/apply", icon: TrendingUp, label: "Apply Now", highlight: true },
+  ];
+
+  // Close menus on route change
+  useEffect(() => {
+    setDrawerOpen(false);
+    setMenuOpen(false);
+  }, [location.pathname]);
 
   // Prevent body scroll when drawer is open
   useEffect(() => {
     document.body.style.overflow = drawerOpen ? "hidden" : "";
     return () => { document.body.style.overflow = ""; };
   }, [drawerOpen]);
+
+  const handleNavSelect = () => {
+    setMenuOpen(false);
+    setDrawerOpen(false);
+  };
 
   return (
     <nav className="fixed top-0 left-0 right-0 z-50 border-b border-gold/20 bg-navy-dark/95 backdrop-blur-md">
@@ -34,46 +52,42 @@ export default function Navbar() {
 
         {/* Desktop Nav Links */}
         <div className="hidden sm:flex items-center gap-2">
-          <Link
-            to="/"
-            className={`text-sm px-3 py-2 rounded transition-colors ${
-              location.pathname === "/" ? "text-gold font-semibold" : "text-muted-foreground hover:text-foreground"
-            }`}
-          >
-            Home
-          </Link>
-          <Link
-            to="/register"
-            className={`text-sm px-3 py-2 rounded transition-colors ${
-              location.pathname === "/register" ? "text-gold font-semibold" : "text-muted-foreground hover:text-foreground"
-            }`}
-          >
-            <span className="flex items-center gap-1"><BookOpen size={12} /> Register</span>
-          </Link>
-          <Link
-            to="/status"
-            className={`text-sm px-3 py-2 rounded transition-colors ${
-              location.pathname === "/status" ? "text-gold font-semibold" : "text-muted-foreground hover:text-foreground"
-            }`}
-          >
-            <span className="flex items-center gap-1"><Search size={12} /> Status</span>
-          </Link>
-          <Link
-            to="/admin"
-            className={`text-sm px-3 py-2 rounded transition-colors ${
-              location.pathname === "/admin" ? "text-gold font-semibold" : "text-muted-foreground hover:text-foreground"
-            }`}
-          >
-            <span className="flex items-center gap-1"><Shield size={12} /> Admin</span>
-          </Link>
-          <Link
-            to="/technical-department"
-            className={`text-sm px-3 py-2 rounded transition-colors ${
-              location.pathname === "/technical-department" ? "text-gold font-semibold" : "text-muted-foreground hover:text-foreground"
-            }`}
-          >
-            <span className="flex items-center gap-1"><Settings2 size={12} /> Tech Assist</span>
-          </Link>
+          <div className="relative">
+            <button
+              type="button"
+              onClick={() => setMenuOpen((prev) => !prev)}
+              className="flex items-center gap-2 rounded-full border border-gold/20 bg-gold/10 px-3 py-2 text-sm font-medium text-gold transition-colors hover:bg-gold/20"
+              aria-label="Open navigation menu"
+            >
+              <Menu size={16} />
+              <span>Menu</span>
+            </button>
+
+            {menuOpen && (
+              <div className="absolute right-0 top-12 w-56 rounded-xl border border-gold/20 bg-navy-dark/95 p-2 shadow-2xl shadow-black/30 backdrop-blur-md">
+                {navLinks.map(({ to, icon: Icon, label, highlight }) => (
+                  <Link
+                    key={to}
+                    to={to}
+                    onClick={handleNavSelect}
+                    className={`flex items-center justify-between rounded-lg px-3 py-2.5 text-sm transition-all ${
+                      highlight
+                        ? "gold-gradient text-navy-dark font-semibold"
+                        : location.pathname === to
+                        ? "bg-gold/10 text-gold"
+                        : "text-muted-foreground hover:bg-secondary/50 hover:text-foreground"
+                    }`}
+                  >
+                    <span className="flex items-center gap-2">
+                      <Icon size={15} />
+                      {label}
+                    </span>
+                    <ChevronRight size={14} />
+                  </Link>
+                ))}
+              </div>
+            )}
+          </div>
           {!isApplyPage && !isAgreementPage && (
             <Link
               to="/apply"
@@ -128,18 +142,11 @@ export default function Navbar() {
 
         {/* Drawer Links */}
         <nav className="flex-1 flex flex-col gap-1 px-4 py-6">
-          {[
-            { to: "/", icon: Home, label: "Home" },
-            { to: "/register", icon: BookOpen, label: "Register Numbers" },
-            { to: "/status", icon: Search, label: "Status Tracker" },
-            { to: "/admin", icon: Shield, label: "Admin" },
-            { to: "/technical-department", icon: Settings2, label: "Tech Assist" },
-            { to: "/apply", icon: TrendingUp, label: "Apply Now", highlight: true },
-          ].map(({ to, icon: Icon, label, highlight }) => (
+          {navLinks.map(({ to, icon: Icon, label, highlight }) => (
             <Link
               key={to}
               to={to}
-              onClick={() => setDrawerOpen(false)}
+              onClick={handleNavSelect}
               className={`flex items-center gap-3 px-4 py-3.5 rounded-lg font-medium text-base transition-all ${
                 highlight
                   ? "gold-gradient text-navy-dark font-bold shadow-lg shadow-gold/20"
