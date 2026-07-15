@@ -7,6 +7,10 @@ export interface SiteSettings {
   heroPrimaryCta: string;
   heroSecondaryCta: string;
   technicalAuthorizedPerson: string;
+  showAnnouncementBanner: boolean;
+  announcementBannerText: string;
+  selectedTheme: "premium" | "festive" | "minimal";
+  maintenanceMode: boolean;
   showCommissionSection: boolean;
   showMarketChartSection: boolean;
   showCommunitySection: boolean;
@@ -36,7 +40,11 @@ export function getDefaultSiteSettings(): SiteSettings {
     heroSubtitle: "A trusted long-term share investment plan designed for your future wealth. Managed by Co-Applicant Mr. Manoj.",
     heroPrimaryCta: "Apply Now",
     heroSecondaryCta: "View Plan Details",
-    technicalAuthorizedPerson: "Mr. Charan",
+    technicalAuthorizedPerson: "Charan",
+    showAnnouncementBanner: false,
+    announcementBannerText: "Welcome to OTI — new updates are now live.",
+    selectedTheme: "premium",
+    maintenanceMode: false,
     showCommissionSection: true,
     showMarketChartSection: true,
     showCommunitySection: true,

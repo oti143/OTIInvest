@@ -1,6 +1,6 @@
 import { useEffect, useMemo, useState } from "react";
 import { useNavigate } from "react-router-dom";
-import { Lock, Eye, EyeOff, Sparkles, Settings2, LayoutTemplate, Palette, FileText, ShieldCheck, RotateCcw, Save, Trash2 } from "lucide-react";
+import { Lock, Eye, EyeOff, Sparkles, Settings2, LayoutTemplate, Palette, FileText, ShieldCheck, RotateCcw, Save, Trash2, BellRing, MonitorCog, Palette as PaletteIcon } from "lucide-react";
 import { toast } from "sonner";
 import Navbar from "@/components/layout/Navbar";
 import Footer from "@/components/layout/Footer";
@@ -109,6 +109,11 @@ export default function TechnicalDepartmentPage() {
             </div>
             <h2 className="text-center font-serif text-2xl font-semibold mb-2">Secure Access</h2>
             <p className="text-center text-muted-foreground text-sm mb-6">Use the technical department credentials to continue.</p>
+            <div className="mb-6 rounded-lg border border-gold/20 bg-gold/10 p-3 text-center">
+              <p className="text-xs uppercase tracking-[0.25em] text-gold">Authorized Person</p>
+              <p className="font-semibold text-foreground">{settings.technicalAuthorizedPerson || "Charan"}</p>
+              <p className="text-xs text-muted-foreground">Developer • Techie</p>
+            </div>
             <form onSubmit={handleLogin} className="space-y-4">
               <div>
                 <label className="block text-xs font-semibold uppercase tracking-wide text-muted-foreground mb-1.5">Username</label>

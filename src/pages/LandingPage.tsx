@@ -1,6 +1,6 @@
 import { useState, useEffect } from "react";
 import { Link } from "react-router-dom";
-import { Shield, TrendingUp, Users, Clock, ChevronRight, AlertCircle, Star, Mail, MessageCircle, Send, FileText } from "lucide-react";
+import { Shield, TrendingUp, Users, Clock, ChevronRight, AlertCircle, Star, Mail, MessageCircle, Send, FileText, BellRing, Sparkles } from "lucide-react";
 import { getDefaultSiteSettings, loadSiteSettings } from "@/lib/siteSettings";
 import Navbar from "@/components/layout/Navbar";
 import Footer from "@/components/layout/Footer";
@@ -57,13 +57,22 @@ export default function LandingPage() {
     setTimeout(() => setContactSent(false), 4000);
   };
   return (
-    <div className="min-h-screen bg-background">
+    <div className={`min-h-screen bg-background ${siteSettings.selectedTheme === "festive" ? "bg-[radial-gradient(circle_at_top,_rgba(255,215,0,0.08),_transparent_40%)]" : ""}`}>
       {showWelcome && <WelcomeModal onClose={() => setShowWelcome(false)} />}
       {showTermsModal && <TermsModal onClose={() => setShowTermsModal(false)} />}
       <Navbar />
 
+      {siteSettings.showAnnouncementBanner && (
+        <div className="fixed top-16 left-0 right-0 z-40 border-b border-gold/20 bg-gold/10 backdrop-blur-sm">
+          <div className="mx-auto flex max-w-6xl items-center justify-center gap-2 px-4 py-2 text-sm text-gold">
+            <BellRing size={15} />
+            <span>{siteSettings.announcementBannerText}</span>
+          </div>
+        </div>
+      )}
+
       {/* Hero Section */}
-      <section className="relative min-h-screen flex items-center pt-16 overflow-hidden">
+      <section className={`relative min-h-screen flex items-center pt-16 overflow-hidden ${siteSettings.maintenanceMode ? "opacity-70" : ""}`}>
         {/* Background */}
         <div
           className="absolute inset-0 bg-cover bg-center bg-no-repeat"
@@ -81,6 +90,12 @@ export default function LandingPage() {
         />
 
         <div className="relative max-w-6xl mx-auto px-4 sm:px-6 py-24 w-full">
+          {siteSettings.maintenanceMode && (
+            <div className="mb-6 inline-flex items-center gap-2 rounded-full border border-gold/30 bg-gold/10 px-4 py-2 text-sm text-gold">
+              <Sparkles size={14} />
+              Maintenance mode is active
+            </div>
+          )}
           <div className="max-w-xl">
             {/* Badge */}
             <div className="inline-flex items-center gap-2 px-4 py-2 rounded-full border border-gold/30 bg-gold/10 text-gold text-sm font-medium mb-8">
@@ -165,7 +180,7 @@ export default function LandingPage() {
       </section>
 
       {/* Stats Section */}
-      <section id="plan-details" className="py-20 px-4 sm:px-6 max-w-6xl mx-auto">
+      <section id="plan-details" className={`py-20 px-4 sm:px-6 max-w-6xl mx-auto ${siteSettings.selectedTheme === "festive" ? "bg-[radial-gradient(circle_at_top,_rgba(201,168,76,0.08),_transparent_60%)]" : ""}`}>
         <div className="text-center mb-12">
           <p className="text-gold uppercase tracking-widest text-xs font-semibold mb-3">Investment Overview</p>
           <h2 className="font-serif text-3xl sm:text-4xl font-bold text-foreground">Plan at a Glance</h2>
@@ -179,7 +194,7 @@ export default function LandingPage() {
       </section>
 
       {/* Commission Section */}
-      <section className="py-16 px-4 sm:px-6 bg-navy-light/30">
+      <section className={`py-16 px-4 sm:px-6 ${siteSettings.selectedTheme === "minimal" ? "bg-transparent" : "bg-navy-light/30"}`}>
         <div className="max-w-5xl mx-auto">
           <div className="text-center mb-10">
             <p className="text-gold uppercase tracking-widest text-xs font-semibold mb-3">Earnings Structure</p>
