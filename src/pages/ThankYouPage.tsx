@@ -1,39 +1,22 @@
 
 import { useEffect, useRef, useState } from "react";
-import { Link, useNavigate } from "react-router-dom";
+import { Link, useLocation, useNavigate } from "react-router-dom";
 import { CheckCircle, Copy, Download, Home, Share2, Check } from "lucide-react";
 import WhatsAppButton from "@/components/features/WhatsAppButton";
+import type { ApplicationForm } from "@/types";
 
 export default function ThankYouPage() {
   const navigate = useNavigate();
+  const location = useLocation();
   const printRef = useRef<HTMLDivElement>(null);
   const [copied, setCopied] = useState(false);
 
+  const appData = (location.state?.formData as (ApplicationForm & { refNo?: string }) | undefined) || null;
+  const refNo = appData?.refNo || `OTIR${new Date().getFullYear()}0001`;
+
   useEffect(() => {
-    const submitted = localStorage.getItem("oti_submitted");
-    if (!submitted) navigate("/");
-  }, [navigate]);
-
-  const appData = (() => {
-    try {
-      return JSON.parse(localStorage.getItem("oti_application") || "null");
-    } catch { return null; }
-  })();
-
-  // Stable refNo from localStorage — prefer OTIR format
-  const refNo = (() => {
-    for (let i = 0; i < localStorage.length; i++) {
-      const key = localStorage.key(i);
-      if (key && key.startsWith("oti_app_")) {
-        try {
-          const app = JSON.parse(localStorage.getItem(key) || "");
-          if (app.phone === appData?.phone) return app.refNo;
-        } catch { /* skip */ }
-      }
-    }
-    // Fallback: get from submitted key
-    return localStorage.getItem("oti_last_refno") || `OTIR${new Date().getFullYear()}0001`;
-  })();
+    if (!appData) navigate("/");
+  }, [appData, navigate]);
 
   const formatDate = (d: string) => {
     if (!d) return "—";
@@ -171,7 +154,6 @@ export default function ThankYouPage() {
           </button>
           <Link
             to="/"
-            onClick={() => localStorage.removeItem("oti_submitted")}
             className="flex items-center justify-center gap-2 px-6 py-3 gold-gradient text-navy-dark font-bold rounded hover:opacity-90 transition-opacity text-sm"
           >
             <Home size={14} /> Back to Home

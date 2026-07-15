@@ -26,11 +26,7 @@ export default function AgreementPage() {
   const printRef = useRef<HTMLDivElement>(null);
   const [showTermsModal, setShowTermsModal] = useState(false);
 
-  const formData: ApplicationForm | null = location.state?.formData || (() => {
-    try {
-      return JSON.parse(localStorage.getItem("oti_application") || "null");
-    } catch { return null; }
-  })();
+  const formData: ApplicationForm | null = location.state?.formData || null;
 
   useEffect(() => {
     if (!formData) {
@@ -93,7 +89,7 @@ export default function AgreementPage() {
         return;
       }
 
-      const refNo = generateOTIRefNumber();
+      const refNo = await generateOTIRefNumber();
       const appWithMeta = {
         ...formData,
         refNo,
@@ -128,12 +124,8 @@ export default function AgreementPage() {
 
       console.log("✅ Successfully saved to Supabase!");
 
-      // Keep localStorage for backward compatibility
-      localStorage.setItem(`oti_app_${refNo}`, JSON.stringify(appWithMeta));
-      localStorage.setItem("oti_submitted", "true");
-      
       toast.success("✅ Registration confirmed!");
-      navigate("/thank-you");
+      navigate("/thank-you", { state: { formData: appWithMeta, refNo } });
     } catch (err) {
       const errMsg = err instanceof Error ? err.message : String(err);
       toast.error(`❌ Error: ${errMsg}`);

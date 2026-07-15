@@ -4,6 +4,7 @@ import { Link } from "react-router-dom";
 import Navbar from "@/components/layout/Navbar";
 import Footer from "@/components/layout/Footer";
 import WhatsAppButton from "@/components/features/WhatsAppButton";
+import { supabase } from "@/lib/supabase";
 
 type StatusType = "Submitted" | "Under Review" | "Shares Allocated";
 
@@ -32,7 +33,7 @@ export default function StatusPage() {
   const [notFound, setNotFound] = useState(false);
   const [searched, setSearched] = useState(false);
 
-  const handleSearch = (e: React.FormEvent) => {
+  const handleSearch = async (e: React.FormEvent) => {
     e.preventDefault();
     setSearched(true);
     setNotFound(false);
@@ -41,39 +42,33 @@ export default function StatusPage() {
     const q = query.trim().toLowerCase();
     if (!q) return;
 
-    // Search all oti_app_ keys
-    for (let i = 0; i < localStorage.length; i++) {
-      const key = localStorage.key(i);
-      if (key && key.startsWith("oti_app_")) {
-        try {
-          const app = JSON.parse(localStorage.getItem(key) || "");
-          if (
-            app.refNo?.toLowerCase() === q ||
-            app.phone === q
-          ) {
-            setResult(app);
-            return;
-          }
-        } catch { /* skip */ }
-      }
-    }
+    try {
+      const { data, error } = await supabase
+        .from("registrations")
+        .select("full_name, phone, submitted_at")
+        .or(`phone.eq.${q},full_name.ilike.%${q}%`)
+        .limit(1);
 
-    // Fallback: check oti_application + oti_submitted
-    const current = localStorage.getItem("oti_application");
-    const submitted = localStorage.getItem("oti_submitted");
-    if (current && submitted) {
-      try {
-        const app = JSON.parse(current);
-        if (app.phone === q) {
-          setResult({
-            ...app,
-            refNo: "OTI-PENDING",
-            status: "Submitted",
-            submittedAt: new Date().toISOString(),
-          });
-          return;
-        }
-      } catch { /* skip */ }
+      if (error) throw error;
+
+      const entry = data?.[0];
+      if (entry) {
+        setResult({
+          refNo: `OTIR-${String((data?.length || 1)).padStart(4, "0")}`,
+          fullName: entry.full_name,
+          phone: entry.phone,
+          contractStart: "",
+          contractEnd: "",
+          status: "Submitted",
+          submittedAt: entry.submitted_at,
+          city: "",
+          state: "",
+          nomineeName: "",
+        });
+        return;
+      }
+    } catch {
+      // fall through to not found
     }
 
     setNotFound(true);

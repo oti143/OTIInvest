@@ -1,9 +1,7 @@
 import { useState, useEffect } from "react";
 import { useNavigate } from "react-router-dom";
 import { Lock, Eye, EyeOff, Users, Download, Search, LogOut, Calendar, CreditCard, ChevronDown, ChevronUp, Mail, Phone, Trash2, AlertCircle } from "lucide-react";
-import { normalizeRefNumbers } from "@/lib/refNumber";
 import { supabase } from "@/lib/supabase";
-import { registrationEmitter } from "@/lib/registrationEmitter";
 import { checkLoginRateLimit, sanitizeInput, generateSessionId } from "@/lib/security";
 import { toast } from "sonner";
 import type { ApplicationForm } from "@/types";
@@ -100,59 +98,34 @@ export default function AdminPage() {
         return;
       }
 
-      // Also load from localStorage for legacy applications
-      normalizeRefNumbers();
-      const localStorage_apps: StoredApp[] = [];
-      const seen = new Set<string>();
-
-      for (let i = 0; i < localStorage.length; i++) {
-        const key = localStorage.key(i);
-        if (key && key.startsWith("oti_app_")) {
-          try {
-            const app = JSON.parse(localStorage.getItem(key) || "") as StoredApp;
-            if (!seen.has(app.phone)) {
-              seen.add(app.phone);
-              localStorage_apps.push(app);
-            }
-          } catch { /* skip */ }
-        }
-      }
-
-      // Combine Supabase data with localStorage data
-      const all: StoredApp[] = (data || [])
-        .map((item: any, index: number) => ({
-          refNo: `OTIR-${String(index + 1).padStart(5, "0")}`,
-          fullName: item.full_name,
-          phone: item.phone,
-          email: item.email,
-          submittedAt: item.submitted_at,
-          status: "Submitted" as const,
-          fatherHusbandName: "",
-          dateOfBirth: "",
-          gender: "",
-          address: "",
-          city: "",
-          state: "",
-          pincode: "",
-          aadhaarNumber: "",
-          panNumber: "",
-          bankName: "",
-          ifscCode: "",
-          bankAccountNumber: "",
-          nomineeName: "",
-          nomineeRelationship: "",
-          nomineePhone: "",
-          contractStart: "",
-          contractEnd: "",
-          referralName: "",
-          referralPhone: "",
-          signature: "",
-        }))
-        .concat(
-          localStorage_apps.filter(
-            (la) => !(data || []).some((sa: any) => sa.phone === la.phone)
-          )
-        );
+      const all: StoredApp[] = (data || []).map((item: any, index: number) => ({
+        refNo: `OTIR-${String(index + 1).padStart(5, "0")}`,
+        fullName: item.full_name || "",
+        phone: item.phone || "",
+        email: item.email || "",
+        submittedAt: item.submitted_at || "",
+        status: "Submitted" as const,
+        fatherHusbandName: "",
+        dateOfBirth: "",
+        gender: "",
+        address: "",
+        city: "",
+        state: "",
+        pincode: "",
+        aadhaarNumber: "",
+        panNumber: "",
+        bankName: "",
+        ifscCode: "",
+        bankAccountNumber: "",
+        nomineeName: "",
+        nomineeRelationship: "",
+        nomineePhone: "",
+        contractStart: "",
+        contractEnd: "",
+        referralName: "",
+        referralPhone: "",
+        signature: "",
+      }));
 
       setApplications(all);
     } catch (err) {
@@ -220,14 +193,7 @@ export default function AdminPage() {
   };
 
   const handleStatusChange = (refNo: string, status: StoredApp["status"]) => {
-    const key = `oti_app_${refNo}`;
-    const existing = localStorage.getItem(key);
-    if (existing) {
-      const parsed = JSON.parse(existing);
-      const updated = { ...parsed, status };
-      localStorage.setItem(key, JSON.stringify(updated));
-      setApplications((prev) => prev.map((a) => a.refNo === refNo ? { ...a, status } : a));
-    }
+    setApplications((prev) => prev.map((a) => a.refNo === refNo ? { ...a, status } : a));
   };
 
   const handleNotifyInvestor = (app: StoredApp) => {
@@ -248,10 +214,6 @@ export default function AdminPage() {
     }
 
     try {
-      // Delete from localStorage
-      const key = `oti_app_${app.refNo}`;
-      localStorage.removeItem(key);
-
       // Delete from Supabase
       if (app.phone) {
         await supabase
@@ -290,16 +252,6 @@ export default function AdminPage() {
         toast.error("Failed to clear records");
         return;
       }
-
-      // Clear localStorage
-      const keysToDelete: string[] = [];
-      for (let i = 0; i < localStorage.length; i++) {
-        const key = localStorage.key(i);
-        if (key && (key.startsWith("oti_app_") || key === "oti_submitted")) {
-          keysToDelete.push(key);
-        }
-      }
-      keysToDelete.forEach(key => localStorage.removeItem(key));
 
       setApplications([]);
       setExpandedRow(null);

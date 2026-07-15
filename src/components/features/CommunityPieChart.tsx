@@ -1,19 +1,9 @@
-import { useMemo } from "react";
+import { useEffect, useState } from "react";
 import { PieChart, Pie, Cell, Tooltip, ResponsiveContainer, Legend } from "recharts";
 import { Users } from "lucide-react";
+import { supabase } from "@/lib/supabase";
 
 const TOTAL_SEATS = 6000;
-
-function getSubmittedCount(): number {
-  let count = 0;
-  for (let i = 0; i < localStorage.length; i++) {
-    const key = localStorage.key(i);
-    if (key && key.startsWith("oti_app_")) count++;
-  }
-  const submitted = localStorage.getItem("oti_submitted");
-  if (submitted && count === 0) count = 1;
-  return count;
-}
 
 const RADIAN = Math.PI / 180;
 
@@ -39,7 +29,37 @@ const renderCustomLabel = ({ cx, cy, midAngle, innerRadius, outerRadius, percent
 };
 
 export default function CommunityPieChart() {
-  const filled = useMemo(() => getSubmittedCount(), []);
+  const [filled, setFilled] = useState(0);
+
+  useEffect(() => {
+    let active = true;
+    const fetchCount = async () => {
+      try {
+        const { count, error } = await supabase
+          .from("registrations")
+          .select("*", { count: "exact", head: true });
+
+        if (!active) return;
+        if (error) {
+          console.error("Error fetching count:", error);
+          return;
+        }
+
+        setFilled(count || 0);
+      } catch (err) {
+        console.error("Error:", err);
+      }
+    };
+
+    fetchCount();
+    const pollInterval = setInterval(fetchCount, 2000);
+
+    return () => {
+      active = false;
+      clearInterval(pollInterval);
+    };
+  }, []);
+
   const remaining = TOTAL_SEATS - filled;
 
   const data = [

@@ -8,6 +8,7 @@ import StatusPage from "@/pages/StatusPage";
 import NotFound from "@/pages/NotFound";
 import WelcomePage from "@/pages/WelcomePage";
 import RegisterPage from "@/pages/RegisterPage";
+import TechnicalDepartmentPage from "@/pages/TechnicalDepartmentPage";
 
 export default function App() {
   return (
@@ -20,6 +21,7 @@ export default function App() {
       <Route path="/admin" element={<AdminPage />} />
       <Route path="/status" element={<StatusPage />} />
       <Route path="/register" element={<RegisterPage />} />
+      <Route path="/technical-department" element={<TechnicalDepartmentPage />} />
       <Route path="*" element={<NotFound />} />
     </Routes>
   );

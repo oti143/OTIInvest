@@ -1,16 +1,14 @@
-import { useState, useEffect, useCallback } from "react";
+import { useState, useEffect } from "react";
 import { useNavigate } from "react-router-dom";
 import { useForm } from "react-hook-form";
 import { zodResolver } from "@hookform/resolvers/zod";
 import { z } from "zod";
 import { toast } from "sonner";
-import { User, Phone, Mail, MapPin, CreditCard, Heart, Users, ChevronRight, ChevronLeft, Clock, RotateCcw } from "lucide-react";
+import { User, Phone, Mail, MapPin, CreditCard, Heart, Users, ChevronRight, ChevronLeft } from "lucide-react";
 import Navbar from "@/components/layout/Navbar";
 import Footer from "@/components/layout/Footer";
 import { INDIAN_STATES } from "@/constants";
 import type { ApplicationForm } from "@/types";
-
-const DRAFT_KEY = "oti_form_draft";
 
 const schema = z.object({
   fullName: z.string().min(2, "Full name is required"),
@@ -49,71 +47,19 @@ const STEPS = [
   { id: 4, label: "Referral & Agreement", icon: Users },
 ];
 
-function formatDraftTime(iso: string): string {
-  try {
-    const d = new Date(iso);
-    return d.toLocaleString("en-IN", {
-      day: "2-digit", month: "short", year: "numeric",
-      hour: "2-digit", minute: "2-digit",
-    });
-  } catch { return iso; }
-}
-
 export default function ApplicationPage() {
   const [currentStep, setCurrentStep] = useState(1);
-  const [draftSavedAt, setDraftSavedAt] = useState<string | null>(null);
-  const [showDraftBanner, setShowDraftBanner] = useState(false);
   const navigate = useNavigate();
 
   const {
     register,
     handleSubmit,
     trigger,
-    watch,
-    reset,
     formState: { errors },
   } = useForm<FormData>({
     resolver: zodResolver(schema),
     mode: "onBlur",
   });
-
-  // Restore draft on mount
-  useEffect(() => {
-    const raw = localStorage.getItem(DRAFT_KEY);
-    if (raw) {
-      try {
-        const { data, savedAt } = JSON.parse(raw);
-        if (data && savedAt) {
-          reset(data);
-          setDraftSavedAt(savedAt);
-          setShowDraftBanner(true);
-        }
-      } catch { /* ignore */ }
-    }
-  }, [reset]);
-
-  // Debounced auto-save
-  const watchedValues = watch();
-  const saveDraft = useCallback(() => {
-    const savedAt = new Date().toISOString();
-    try {
-      localStorage.setItem(DRAFT_KEY, JSON.stringify({ data: watchedValues, savedAt }));
-      setDraftSavedAt(savedAt);
-    } catch { /* ignore */ }
-  }, [watchedValues]);
-
-  useEffect(() => {
-    const t = setTimeout(saveDraft, 500);
-    return () => clearTimeout(t);
-  }, [saveDraft]);
-
-  const clearDraft = () => {
-    localStorage.removeItem(DRAFT_KEY);
-    setShowDraftBanner(false);
-    setDraftSavedAt(null);
-    reset();
-    toast.success("Draft cleared successfully.");
-  };
 
   const stepFields: Record<number, (keyof FormData)[]> = {
     1: ["fullName", "fatherHusbandName", "dateOfBirth", "gender", "phone", "email", "address", "city", "state", "pincode"],
@@ -129,8 +75,6 @@ export default function ApplicationPage() {
   };
 
   const onSubmit = (data: FormData) => {
-    localStorage.setItem("oti_application", JSON.stringify(data));
-    localStorage.removeItem(DRAFT_KEY); // clear draft on submit
     navigate("/agreement", { state: { formData: data } });
   };
 
@@ -143,25 +87,6 @@ export default function ApplicationPage() {
       <Navbar />
 
       <div className="pt-20 pb-16 px-4 sm:px-6 max-w-3xl mx-auto">
-        {/* Draft Banner */}
-        {showDraftBanner && draftSavedAt && (
-          <div className="mt-6 flex items-center justify-between gap-3 px-4 py-3 rounded-lg border border-gold/30 bg-gold/8 text-sm">
-            <div className="flex items-center gap-2 min-w-0">
-              <Clock size={14} className="text-gold flex-shrink-0" />
-              <span className="text-gold font-semibold flex-shrink-0">Resume Draft Available</span>
-              <span className="text-muted-foreground text-xs hidden sm:inline truncate">
-                — Last saved: {formatDraftTime(draftSavedAt)}
-              </span>
-            </div>
-            <button
-              onClick={clearDraft}
-              className="flex items-center gap-1.5 px-3 py-1.5 border border-border rounded text-xs text-muted-foreground hover:text-foreground hover:border-gold/30 transition-colors flex-shrink-0"
-            >
-              <RotateCcw size={11} /> Clear Draft
-            </button>
-          </div>
-        )}
-
         {/* Header */}
         <div className="text-center mt-8 mb-10">
           <p className="text-gold uppercase tracking-widest text-xs font-semibold mb-2">OTI Investment</p>
@@ -197,13 +122,6 @@ export default function ApplicationPage() {
             );
           })}
         </div>
-
-        {/* Auto-save indicator */}
-        {draftSavedAt && (
-          <p className="text-muted-foreground text-xs text-right mb-2 flex items-center justify-end gap-1">
-            <Clock size={10} /> Draft auto-saved at {formatDraftTime(draftSavedAt)}
-          </p>
-        )}
 
         {/* Form Card */}
         <div className="navy-card rounded-xl p-6 sm:p-8 border-gold/20">

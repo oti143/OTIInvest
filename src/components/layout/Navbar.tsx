@@ -1,7 +1,7 @@
 
 import { useState, useEffect } from "react";
 import { Link, useLocation } from "react-router-dom";
-import { Shield, Search, Menu, X, Home, TrendingUp, BookOpen } from "lucide-react";
+import { Shield, Search, Menu, X, Home, TrendingUp, BookOpen, Settings2 } from "lucide-react";
 
 export default function Navbar() {
   const location = useLocation();
@@ -66,6 +66,14 @@ export default function Navbar() {
           >
             <span className="flex items-center gap-1"><Shield size={12} /> Admin</span>
           </Link>
+          <Link
+            to="/technical-department"
+            className={`text-sm px-3 py-2 rounded transition-colors ${
+              location.pathname === "/technical-department" ? "text-gold font-semibold" : "text-muted-foreground hover:text-foreground"
+            }`}
+          >
+            <span className="flex items-center gap-1"><Settings2 size={12} /> Tech</span>
+          </Link>
           {!isApplyPage && !isAgreementPage && (
             <Link
               to="/apply"
@@ -74,10 +82,13 @@ export default function Navbar() {
               Apply Now
             </Link>
           )}
-          <div className="flex items-center gap-1 text-muted-foreground text-xs">
-            <Shield size={12} />
-            <span>Secure</span>
-          </div>
+          <Link
+            to="/technical-department"
+            className="flex items-center gap-1 rounded-full border border-gold/20 bg-gold/10 px-3 py-1.5 text-xs font-medium text-gold transition-colors hover:bg-gold/20"
+          >
+            <Settings2 size={12} />
+            <span>Tech Assist</span>
+          </Link>
         </div>
 
         {/* Mobile hamburger */}
@@ -129,6 +140,7 @@ export default function Navbar() {
             { to: "/register", icon: BookOpen, label: "Register Numbers" },
             { to: "/status", icon: Search, label: "Status Tracker" },
             { to: "/admin", icon: Shield, label: "Admin" },
+            { to: "/technical-department", icon: Settings2, label: "Technical Dept" },
             { to: "/apply", icon: TrendingUp, label: "Apply Now", highlight: true },
           ].map(({ to, icon: Icon, label, highlight }) => (
             <Link
@@ -151,10 +163,13 @@ export default function Navbar() {
 
         {/* Drawer Footer */}
         <div className="px-6 py-5 border-t border-gold/15">
-          <div className="flex items-center gap-2 text-xs text-muted-foreground">
-            <Shield size={12} className="text-gold" />
-            <span>Secure Investment Platform</span>
-          </div>
+          <Link
+            to="/technical-department"
+            className="flex items-center gap-2 text-xs text-gold hover:text-gold/80"
+          >
+            <Settings2 size={12} />
+            <span>Tech Assist Portal</span>
+          </Link>
           <p className="text-muted-foreground text-xs mt-2">© {new Date().getFullYear()} OTI One Time Invest</p>
         </div>
       </div>
